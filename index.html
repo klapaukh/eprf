@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<head>
+  <title>
+    Entry Forms Assistant
+  </title>
+  <meta charset="UTF-8">
+<style>
+body {
+  font-size: 12pt;
+  color: #000000;
+}
+
+@media only screen and (min-width: 1024px) {
+  .container {
+    width: 80%;
+    padding-left: 10%;
+  }
+}
+
+.qButton {
+  border-radius: 50%;
+  border: 1px solid gray;
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  text-align: center;
+  background: lightgray;
+  margin-left: 0.5em;
+}
+
+.qButton:hover {
+  background: white;
+}
+
+.categoryTitle,
+.expandButton,
+.questionText,
+.questionTitle,
+.answersSet,
+.answer { 
+  display: inline-block;
+}
+
+.questionTitle {
+  padding-top: 0.7em;
+  padding-bottom: 0.7em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.answersSet {
+  margin-left: 2em;
+}
+
+.subbutton,
+.answer.complete {
+  padding: 0.7em;
+  margin: 0.5em;
+  border-style: solid;
+  border-width: 2px;
+  border-color: midnightblue;
+  border-radius: 5px;
+}
+
+.answer.complete.selected {
+  color: white;
+  background-color: midnightblue;
+}
+
+.subbutton:hover,
+.answer.complete:hover {
+  color: white;
+  background-color: cornflowerblue;
+}
+
+.question{
+}
+
+.questionList {
+  display: none;
+}
+
+.expanded ~ .questionList {
+  display: block;
+}
+
+.expandButton {
+  font-size: 20px;
+  padding: 0.25em;
+  margin-right: 0.25em;
+}
+
+.expandButton:after {
+  content: '+';
+}
+
+.expanded > .expandButton:after {
+  content: '-';
+}
+
+
+.categoryHeader {
+  border-style: solid;
+  border-width: 1px 0px 1px 0px;
+  border-color: midnightblue;
+  margin-top: 0.2em;
+  padding-top: 0.2em;
+  font-size: 14pt;
+  font-weight: bolder;
+}
+
+.categoryHeader:hover {
+  background-color: aliceblue;
+}
+
+.selected > .subbutton,
+.suffix,
+.prefix,
+.prompt,
+.otherInput,
+.hidden {
+  display: none
+}
+
+.prompt {
+  color: gray;
+}
+
+.selected > .prefix,
+.selected > .suffix,
+.selected > .prompt,
+.selected > .otherInput {
+  display: inline;
+}
+
+.subordinate {
+  margin-left: 2.5em;
+}
+
+#presets {
+  padding-bottom: 1em;
+  margin-bottom: .7em;
+}
+
+.preset {
+  display: inline-block;
+  padding: .7em;
+  margin: .5em;
+  border-style: solid;
+  border-width: 2px;
+  border-color: midnightblue;
+  border-radius: 5px;
+  background-color: aliceblue;
+}
+
+.preset:active {
+  background-color: white;
+}
+
+#outputHeader {  
+  margin-bottom: 1em;
+  margin-top: 1em;
+  padding-bottom: 1em;
+  padding-top: 1em;
+  border-color: black;
+  border-style: solid;
+  border-width: 1px 0px 1px 0px;
+}
+
+#outputText {
+  margin-top: 2em;
+}
+
+#footer {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-color: black;
+  border-style: solid;
+  border-width: 1px 0px 0px 0px;
+  color: gray;
+  font-size: 8pt;
+}
+
+#warranty {
+  margin-top: 1em;
+  width: 100%;
+}
+
+#header {
+  font-size: 20pt;
+  margin-bottom: 2em;
+  font-weight: bold;
+}
+
+#copy {
+  display: inline-block;
+  padding: .7em;
+  margin-left: 5em;
+  margin-top: 2em;
+  border-style: solid;
+  border-width: 2px;
+  border-color: midnightblue;
+  border-radius: 5px;
+  background-color: aliceblue;
+}
+
+.modal {
+    display: block; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 0px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+    transition: 3s;
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+}
+
+#linksHeading {
+  margin-top: 1.5em;
+  font-size: 14pt;
+}
+
+/* 100% Image Width on Smaller Screens */
+@media only screen and (max-width: 700px){
+    .modal-content {
+        width: 100%;
+    }
+}
+  
+/* vim: set sw=2 ts=2 expandtab : */
+</style>
+<script>
+var exports = {}
+'use strict';
+exports.__esModule = true;
+exports.questionJSON = {
+    Airway: {
+        'Airway Status': [
+            { display: 'Open' },
+            { display: 'Closed' }
+        ],
+        'Airway Control': [
+            { display: 'Self-maintained' },
+            { display: 'Jaw thrust', output: 'Jaw thrust performed' },
+            {}
+        ],
+        Secretions: [
+            { display: 'No', output: 'Nil secretions' },
+            {}
+        ]
+    },
+    Breathing: {
+        SOB: [
+            { display: 'Yes', output: 'SOB' },
+            { display: 'No', output: 'Nil SOB' }
+        ],
+        Speech: [
+            { display: 'Full Sentences', output: 'Speaking full sentences' },
+            { suffix: ' WPB', inputType: 'number' }
+        ],
+        Cyanosis: [
+            { display: 'Yes', output: 'Cyanosed' },
+            { display: 'No', output: 'Nil cyanosis' },
+            {}
+        ],
+        Cough: [
+            { display: 'Productive', output: 'Productive cough' },
+            { display: 'Non-Productive', output: 'Non-productive cough' },
+            { display: 'No', output: 'Nil cough' },
+            {}
+        ],
+        'Lung sounds': [
+            { display: 'Normal', output: 'Vesicular lung sounds' },
+            {}
+        ],
+        Percussion: [
+            { display: 'Normal', output: 'Equal and normal resonance on percussion' },
+            {}
+        ],
+        Frenesis: [
+            {
+                display: 'Normal',
+                output: 'Equal frenity'
+            },
+            {}
+        ],
+        'Accessory Muscle Use': [
+            { display: 'Yes', output: 'Accessory muscle use' },
+            { display: 'No', output: 'Nil accessory muscle use' }
+        ],
+        'Tracheal Tugging': [
+            { display: 'Yes', output: 'Tracheal tugging' },
+            { display: 'No', output: 'Nil Tracheal tugging' }
+        ],
+        'Nasal Flaring': [
+            { display: 'Yes', output: 'Nasal Flaring' },
+            { display: 'No', output: 'Nil Nasal Flaring' }
+        ],
+        'Auto-PEEP': [
+            { display: 'Yes', output: 'Auto-PEEP' },
+            { display: 'No', output: 'Nil auto-peep' }
+        ],
+        'Chest Trauma': {
+            'Subcutaenous Emphysema': [
+                { display: 'No', output: 'Nil subcutaenous emphysema' },
+                { display: 'Yes', output: 'Subcutaenous emphysema' },
+                {}
+            ],
+            'Tracheal Deviation': [
+                { display: 'No', output: 'Nil tracheal deviation' },
+                { display: 'Yes', output: 'Tracheal deviation' },
+                {}
+            ],
+            'Sucking chest wound': [
+                { display: 'No', output: 'Nil sucking chest wound' },
+                { label: 'Yes', prefix: 'Sucking chest wound ', prompt: 'location' },
+                {}
+            ]
+        }
+    },
+    Circulation: {
+        'Pulse Strength': [
+            { display: 'Strong', output: 'Pulse strong' },
+            { display: 'Weak', output: 'Pulse weak' },
+            {}
+        ],
+        'Pulse Rhythm': [
+            { display: 'regular', join: ' and' },
+            { display: 'irregular', join: ' and' },
+            { join: ' and' }
+        ],
+        'Skin Temperature': [
+            { display: 'Cold', output: 'Cold skin' },
+            { display: 'Cool', output: 'Cool skin' },
+            { display: 'Warm', output: 'Warm skin' },
+            { display: 'Hot', output: 'Hot skin' },
+            {},
+        ],
+        'Skin Humidity': [
+            { display: 'Dry', output: 'Dry skin' },
+            { display: 'Clammy', output: 'Clammy skin' },
+            { display: 'Sweaty', output: 'Sweaty skin' },
+            {}
+        ],
+        'Chest Pain': [
+            { display: 'No', output: 'Nil chest pain' },
+            { prompt: '(O)nset, (P)rovokes, (Q)uality, (R)egion / (R)adiating, (S)everity, (T)iming' }
+        ],
+        '12 Lead Rhythm': [
+            { display: '12 lead: NSR' },
+            { display: '12 lead: Sinus tachycardia' },
+            { display: '12 lead: Sinus bradycardia' },
+            {}
+        ],
+        '12 Lead Ischemia': [
+            { display: 'nil ischaemic changes', join: ' and' },
+            { join: ' and' },
+            { type: 'HELP', image: 'http://www.ecg-quiz.com/wp-content/uploads/stemi-patterns-ami.jpg' }
+        ],
+        JVD: [
+            { display: 'Yes', output: 'JVD present' },
+            { display: 'No', output: 'Nil JVD' },
+        ],
+        Clubbing: [
+            { display: 'Yes', output: 'Clubbing' },
+            { display: 'No', output: 'Nil clubbing' },
+        ],
+        'Non-Cardiac Chest Pain': {
+            'Pain Worse on Inspiration': [
+                { display: 'Yes', output: 'Pain worse on inspiration' },
+                { display: 'No', output: 'Pain not worse on inspiration' },
+                {}
+            ],
+            'Pain Worse on Palpation': [
+                { display: 'Yes', output: 'Pain worse on palpation' },
+                { display: 'No', output: 'Pain not worse on palpation' },
+                {}
+            ],
+            'Pain Relieved by Leaning Forward': [
+                { display: 'Yes', output: 'Pain relieved by leaning forward' },
+                { display: 'No', output: 'Pain unchanged by leaning forward' },
+                {}
+            ]
+        }
+    },
+    Neurological: {
+        Headache: [
+            { display: 'No', output: 'Nil headache' },
+            { prompt: '(O)nset, (P)rovokes, (Q)uality, (R)egion / (R)adiating, (S)everity, (T)iming' }
+        ],
+        Dizziness: [
+            { display: 'No', output: 'Nil dizziness' },
+            { display: 'Yes', output: 'Patient dizzy' },
+            {}
+        ],
+        'Loss of Consciousness': [
+            { display: 'No', output: 'Nil KO' },
+            { display: 'Yes', output: 'Patient lost consciousness' }
+        ],
+        ALOC: [
+            { display: 'Yes', output: 'ALOC' },
+            { display: 'No', output: 'Nil ALOC' }
+        ],
+        'New Confusion': [
+            { display: 'Yes', output: 'New confusion' },
+            { display: 'No', output: 'Nil new confusion' }
+        ],
+        'Remebers All Events': [
+            { display: 'Yes', output: 'Patient remembers all events' },
+            { display: 'No', output: 'Patient does not remember all events' }
+        ],
+        Sensation: [
+            { display: 'Normal', output: 'Normal sensation' },
+            {}
+        ],
+        Gait: [
+            { display: 'Normal', output: 'Normal gait' },
+            {}
+        ],
+        'Romberg Test': [
+            { display: 'Positive romberg test' },
+            { display: 'Negative romberg test' }
+        ],
+        Reflexes: [
+            { display: 'Normal', output: 'Normal reflexes' },
+            {}
+        ],
+        Coordination: [
+            { display: 'Normal', output: 'Normal coordination' },
+            {}
+        ],
+        Strength: [
+            { display: 'Normal', output: 'Normal strength' },
+            {}
+        ],
+        Mobility: [
+            { display: 'Normal', output: 'Normal mobility' },
+            {}
+        ],
+        Nystagmus: [
+            { display: 'Normal', output: 'Nil nystagmus' },
+            { display: 'Horizontal', output: 'Horizontal nystagmus' },
+            { display: 'Vertical', output: 'Vertical nystagmus' },
+            {}
+        ],
+        'Orientated to Date/Time/Place': [
+            { display: 'Yes', output: 'Oriented to date / time / place' },
+            {}
+        ],
+        'Able to Understand/Retain/Weigh': [
+            { display: 'Yes', output: 'Able to understand / retain / weigh' },
+            {}
+        ],
+        Stroke: {
+            FAST: [
+                { display: 'Positive Right', output: 'Positive fast with right sided weakness' },
+                { display: 'Positive Left', output: 'Positive fast with left sided weakness' },
+                {}
+            ],
+            'Able to Perform Rapid Alternating Movements': [
+                { display: 'Yes', output: 'Nil dysdiadochokinesia' },
+                { display: 'No', output: 'Dysdiadochokinesia' },
+                {}
+            ],
+            'Ataxia': [
+                { display: 'No', output: 'Nil ataxia' },
+                { display: 'Left Sided', output: 'Left sided ataxia' },
+                { display: 'Right Sided', output: 'Right sided ataxia' },
+                {}
+            ],
+            'Intention Tremor': [
+                { display: 'Yes', output: 'Intention tremor' },
+                { display: 'No', output: 'No intention tremor' },
+                {}
+            ],
+            Aphasia: [
+                { display: 'Yes', output: 'Aphasia' },
+                { display: 'No', output: 'No aphasia' },
+                {}
+            ],
+            'Visual Loss': [
+                { display: 'No', output: 'Nil visual loss' },
+                {}
+            ]
+        }
+    },
+    Gastrointestinal: {
+        Pain: [
+            { display: 'No', output: 'Nil Abdo pain' },
+            { prompt: '(O)nset, (P)rovokes, (Q)uality, (R)egion / (R)adiating, (S)everity, (T)iming' }
+        ],
+        Nausea: [
+            { display: 'No', output: 'Nil nausea' },
+            { display: 'Yes', output: 'Patient Nauseous' },
+            {}
+        ],
+        Diarrhoea: [
+            { display: 'No', output: 'Nil diarrhoea' },
+            {}
+        ],
+        Vomiting: [
+            { display: 'No', output: 'Nil vomiting' },
+            {}
+        ],
+        Inspection: [
+            { display: 'No', output: 'Nil distension' },
+            { display: 'Yes', output: 'Distension' },
+            { display: 'Visible Ascites', output: 'Visible ascites' }
+        ],
+        Auscultation: [
+            { display: 'Normal', output: 'Normal bowel sounds' },
+            { display: 'Decreased Sounds', output: 'Decreased bowel sounds' },
+            { display: 'Increased Sounds', output: 'Increased bowel sounds' },
+            {}
+        ],
+        Firmness: [
+            { display: 'Soft' },
+            { display: 'Hard' },
+            {}
+        ],
+        Tenderness: [
+            { display: 'Non-tender' },
+            { display: 'Tender' },
+            {}
+        ],
+        Guarding: [
+            { display: 'No', output: 'Nil guarding' },
+            { display: 'Yes', output: 'Guarding' }
+        ],
+        'Obvious Masses': [
+            { display: 'No', output: 'Nil obvious masses' },
+            {}
+        ],
+        'Pulsating Masses': [
+            { display: 'No', output: 'Nil pulsating masses' },
+            {}
+        ],
+        'Pregnancy': [
+            { display: 'No', output: 'Nil chance of pregnancy' },
+            { display: 'Possible', output: 'Possible pregnancy' },
+            { display: 'Yes', output: 'Pregnant' }
+        ],
+        'Rigidity': [
+            { display: 'No', output: 'No rigidity' },
+            {}
+        ],
+        'Rebound Tenderness': [
+            { display: 'No', output: 'No rebound tenderness' },
+            {}
+        ],
+        'Appetite': [
+            { display: 'Normal', output: 'Normal appetite' },
+            {}
+        ],
+        'Fluid Intake': [
+            { display: 'Normal', output: 'Normal fluid intake' },
+            {}
+        ],
+        'Last Bowel Movement': [
+            { display: 'Unknown', output: 'Last bowel movement time unknown' },
+            { label: 'At Time' }
+        ]
+    },
+    Genitourinary: {
+        Frequency: [
+            { display: 'Normal', output: 'Normal frequency' },
+            {}
+        ],
+        Colour: [
+            { display: 'Normal', output: 'Normal colour' },
+            {}
+        ],
+        Smell: [
+            { display: 'Normal', output: 'Normal smell' },
+            { display: 'Strong', output: 'Strong smell' },
+            {}
+        ],
+        'Pain on Urination': [
+            { display: 'No', output: 'Nil pain on urination' },
+            { display: 'Yes', output: 'Pain on urination' }
+        ]
+    },
+    Social: {
+        'Managing at Home': [
+            { display: 'Yes', output: 'Patient managing at home' },
+            { display: 'No', output: 'Patient not coping at home' }
+        ],
+        Care: [
+            { display: 'Self-Sufficient', output: 'Patient is self-sufficient' },
+            { display: 'Sufficient', output: 'Patient has sufficient care' },
+            { display: 'Needs Additional', output: 'Patient needs further care' },
+            {}
+        ],
+        'Sleep Quality': [
+            { display: 'Good', output: 'Patient sleeps well' },
+            {}
+        ],
+        Stressors: [
+            { display: 'None', output: 'Patientis stress free' },
+            { display: 'New Stresses', output: 'Patient has new stresses' },
+            {}
+        ]
+    },
+    'Mental Health': {
+        'Mental health history': [
+            { display: 'no', output: 'No mental health history ' },
+            {}
+        ],
+        'Drug addictions': [
+            { display: 'no', output: 'No drug addictions' },
+            {}
+        ],
+        'Alcohol dependency': [
+            { display: 'no', output: 'No alcohol dependency' },
+            {}
+        ],
+        'History of OD': [
+            { display: 'no', output: 'No history of OD' },
+            {}
+        ],
+        'History of suicidality': [
+            { display: 'no', output: 'No history of suicidality' },
+            {}
+        ],
+        'History of suicide attempts': [
+            { display: 'no', output: 'No history of suicide attempts' },
+            {}
+        ],
+        'History of self harm/ scarring': [
+            { display: 'no', output: 'No history of self harm / scarring' },
+            {}
+        ],
+        'History of CAMHS involvement': [
+            { display: 'no', output: 'No history of CAMHS involvement' },
+            {}
+        ],
+        'History of MH team involvement': [
+            { display: 'no', output: 'No history of MH team involvement' },
+            {}
+        ]
+    },
+    Paediatric: {
+        Tone: {
+            'Muscle Tone': [
+                { display: 'Good', output: 'Good muscle tone' },
+                {}
+            ],
+            'Spontaneous Movements': [
+                { display: 'Yes', output: 'Spontaneous movements' },
+                {}
+            ],
+            Flaccid: [
+                { display: 'No', output: 'Not flaccid' },
+                {}
+            ]
+        },
+        Consolability: {
+            'Can be Comforted': [
+                { display: 'Yes', output: 'Can be comforted' },
+                {}
+            ],
+            'Calmed by Caregiver': [
+                { display: 'Yes', output: 'Calmed by carer' },
+                {}
+            ]
+        },
+        'Look / Gaze': {
+            'Maintains Eye Contact with People/Stimuli': [
+                { display: 'Yes', output: 'Maintains eye contact with people / stimuli' },
+                {}
+            ]
+        },
+        'Speech/Cry': {
+            Present: [
+                { display: 'Yes', output: 'Speech / cry present' },
+                { display: 'No', output: 'Nil speech / cry' }
+            ],
+            Spontaneous: [
+                { display: 'Spontaneous' },
+                {}
+            ],
+            'Normal Volume & Pitch': [
+                { display: 'Yes', output: 'Normal volume & pitch' },
+                {}
+            ]
+        }
+    }
+};
+'use strict';
+exports.__esModule = true;
+var questions_1 = exports;
+(function () {
+    var type_help = 'HELP';
+    var FATAL_ERROR = 'Something went wrong, and the page failed to load correctly';
+    var categories = {};
+    var questions = {};
+    var answers = [];
+    function getFirstParentWithClass(element, className) {
+        if (element.classList.contains(className)) {
+            return element;
+        }
+        var parent = element.parentElement;
+        while (parent !== undefined && parent !== null && parent !== element) {
+            if (parent.classList.contains(className)) {
+                return parent;
+            }
+            element = parent;
+            parent = element.parentElement;
+        }
+        return undefined;
+    }
+    function createSelect(categoryName, questionText, answer) {
+        return function select(clickEvent) {
+            var answerDiv = getFirstParentWithClass(this, 'answer');
+            if (answerDiv === undefined) {
+                alert(FATAL_ERROR);
+                return;
+            }
+            var hasAnswers = answerDiv.classList.contains('selected');
+            var question = getFirstParentWithClass(this, 'question');
+            if (question === undefined) {
+                alert(FATAL_ERROR);
+                return;
+            }
+            var answersList = question.getElementsByClassName('answer');
+            for (var i = 0; i < answersList.length; i++) {
+                answersList[i].classList.remove('selected');
+            }
+            ;
+            if (!hasAnswers) {
+                answerDiv.classList.add('selected');
+            }
+            answers = answers.map(function (elem) {
+                if (elem.category === categoryName) {
+                    elem.answers.map(function (ans) {
+                        if (ans.question === questionText) {
+                            if (hasAnswers) {
+                                ans.answer = undefined;
+                            }
+                            else if (answer.output !== undefined) {
+                                ans.answer = answer.output;
+                                ans.join = answer.join;
+                            }
+                            else if (answer.display !== undefined) {
+                                ans.answer = answer.display;
+                                ans.join = answer.join;
+                            }
+                            else {
+                                var textBox = answerDiv.getElementsByClassName('otherInput');
+                                ans.answer = textBox[0].value;
+                                ans.join = answer.join;
+                            }
+                        }
+                        return ans;
+                    });
+                }
+                return elem;
+            });
+            printAnswer();
+        };
+    }
+    function createTyped(categoryName, questionText, prefix, suffix) {
+        if (prefix === undefined) {
+            prefix = '';
+        }
+        if (suffix === undefined) {
+            suffix = '';
+        }
+        return function select(keyEvent) {
+            var _this = this;
+            answers = answers.map(function (elem) {
+                if (elem.category === categoryName) {
+                    elem.answers.map(function (ans) {
+                        if (ans.question === questionText) {
+                            ans.answer = prefix + _this.value + suffix;
+                        }
+                        return ans;
+                    });
+                }
+                return elem;
+            });
+            printAnswer();
+        };
+    }
+    function expand(clickEvent) {
+        this.classList.toggle('expanded');
+    }
+    function createSubCategory(parentCategory, categoryName) {
+        var container = categories[parentCategory].getElementsByClassName('questionList')[0];
+        var categoryDiv = document.createElement('div');
+        categoryDiv.classList.add('category');
+        categoryDiv.classList.add('subordinate');
+        categoryDiv.appendChild(createCategoryHeader(categoryName, false));
+        var questionList = document.createElement('div');
+        questionList.classList.add('questionList');
+        categoryDiv.appendChild(questionList);
+        if (categories[categoryName] !== undefined) {
+            alert('Category' + categoryName +
+                ' is present more than once in the questions. This is an error');
+        }
+        categories[categoryName] = categoryDiv;
+        container.appendChild(categoryDiv);
+    }
+    function createCategory(categoryName) {
+        var container = document.getElementById('categoryList');
+        if (container === null) {
+            alert(FATAL_ERROR);
+            return;
+        }
+        var categoryDiv = document.createElement('div');
+        categoryDiv.classList.add('category');
+        categoryDiv.appendChild(createCategoryHeader(categoryName, false));
+        var questionList = document.createElement('div');
+        questionList.classList.add('questionList');
+        categoryDiv.appendChild(questionList);
+        if (categories[categoryName] !== undefined) {
+            alert('Category' + categoryName +
+                ' is present more than once in the questions. This is an error');
+        }
+        categories[categoryName] = categoryDiv;
+        container.appendChild(categoryDiv);
+        answers.push({ category: categoryName, answers: [] });
+    }
+    function createCategoryHeader(categoryName, expanded) {
+        var expandButton = document.createElement('div');
+        expandButton.classList.add('expandButton');
+        var categoryTitle = document.createElement('div');
+        categoryTitle.classList.add('categoryTitle');
+        categoryTitle.appendChild(document.createTextNode(categoryName));
+        var header = document.createElement('div');
+        header.classList.add('categoryHeader');
+        if (expanded) {
+            header.classList.add('expanded');
+        }
+        header.appendChild(expandButton);
+        header.appendChild(categoryTitle);
+        header.onclick = expand;
+        return header;
+    }
+    function addQuestion(categoryName, displayCategory, questionName, answersList) {
+        var category = categories[displayCategory];
+        var questionListDiv = category.getElementsByClassName('questionList');
+        if (questionListDiv.length !== 1) {
+            alert('Something went wrong in setting up the page');
+        }
+        var questionList = questionListDiv[0];
+        var question = document.createElement('div');
+        question.classList.add('question');
+        var questionTitle = document.createElement('div');
+        questionTitle.classList.add('questionTitle');
+        questionTitle.appendChild(document.createTextNode(questionName + ':'));
+        question.appendChild(questionTitle);
+        answersList.forEach(function (answer) {
+            if (answer.type !== undefined && answer.type === type_help) {
+                addQuestionHelp(questionTitle, categoryName, questionName, answer);
+            }
+            else {
+                addAnswer(question, categoryName, questionName, answer);
+            }
+        });
+        questionList.appendChild(question);
+        if (questions[questionName] !== undefined) {
+            alert('Category' + categoryName + ' question ' + questionName +
+                ' is present more than once in the questions. This is an error');
+        }
+        questions[questionName] = question;
+        answers = answers.map(function (elem) {
+            if (elem.category === categoryName) {
+                elem.answers.push({ question: questionName });
+            }
+            return elem;
+        });
+    }
+    function addAnswer(question, categoryName, questionName, answerObject) {
+        var answer = document.createElement('div');
+        answer.classList.add('answer');
+        if (answerObject.display === undefined) {
+            var subbutton = document.createElement('div');
+            var text = void 0;
+            if (answerObject.label === undefined) {
+                text = document.createTextNode('Other');
+            }
+            else {
+                text = document.createTextNode(answerObject.label);
+            }
+            subbutton.appendChild(text);
+            subbutton.classList.add('subbutton');
+            subbutton.onclick = createSelect(categoryName, questionName, answerObject);
+            answer.appendChild(subbutton);
+            if (answerObject.prefix !== undefined) {
+                var prefix = document.createElement('div');
+                prefix.classList.add('prefix');
+                prefix.appendChild(document.createTextNode(answerObject.prefix));
+                answer.appendChild(prefix);
+            }
+            var inputBox = document.createElement('input');
+            inputBox.onkeyup = createTyped(categoryName, questionName, answerObject.prefix, answerObject.suffix);
+            inputBox.oninput = createTyped(categoryName, questionName, answerObject.prefix, answerObject.suffix);
+            inputBox.classList.add('otherInput');
+            if (answerObject.inputType !== undefined) {
+                inputBox.type = answerObject.inputType;
+            }
+            else {
+                inputBox.type = 'text';
+            }
+            answer.appendChild(inputBox);
+            if (answerObject.suffix !== undefined) {
+                var suffix = document.createElement('div');
+                suffix.classList.add('suffix');
+                suffix.appendChild(document.createTextNode(answerObject.suffix));
+                answer.appendChild(suffix);
+            }
+            if (answerObject.prompt !== undefined) {
+                var prompt_1 = document.createElement('div');
+                prompt_1.classList.add('prompt');
+                prompt_1.appendChild(document.createTextNode(answerObject.prompt));
+                answer.appendChild(prompt_1);
+            }
+        }
+        else {
+            var text = document.createTextNode(answerObject.display);
+            answer.appendChild(text);
+            answer.onclick = createSelect(categoryName, questionName, answerObject);
+            answer.classList.add('complete');
+        }
+        question.appendChild(answer);
+    }
+    function addQuestionHelp(questionTitle, categoryName, questionName, answerObject) {
+        var qButton = document.createElement('div');
+        qButton.classList.add('qButton');
+        var qtext = document.createTextNode('?');
+        qButton.appendChild(qtext);
+        if (answerObject.image !== undefined) {
+            qButton.onclick = createImageModal(answerObject.image);
+        }
+        questionTitle.appendChild(qButton);
+    }
+    function createImageModal(imageUrl) {
+        return function (event) {
+            var modal = document.createElement('div');
+            modal.classList.add('modal');
+            modal.onclick = function (ev) {
+                this.remove();
+            };
+            var image = document.createElement('img');
+            image.classList.add('modal-content');
+            image.src = imageUrl;
+            modal.appendChild(image);
+            if (this !== null && this.parentElement != null) {
+                this.parentElement.appendChild(modal);
+            }
+        };
+    }
+    function printAnswer() {
+        var output = document.getElementById('outputText');
+        if (output === null) {
+            alert(FATAL_ERROR);
+            return;
+        }
+        output.innerHTML = '';
+        answers.forEach(function (answer) {
+            var category = answer.category;
+            var first = true;
+            var categoryAnswer = '';
+            answer.answers.forEach(function (ans) {
+                if (ans.answer !== undefined) {
+                    if (first) {
+                        categoryAnswer += category + ': ' + ans.answer;
+                        first = false;
+                    }
+                    else {
+                        categoryAnswer += (ans.join === undefined ? ',' : ans.join) +
+                            ' ' + ans.answer;
+                    }
+                }
+            });
+            if (!first) {
+                categoryAnswer += '.';
+                output.appendChild(document.createTextNode(categoryAnswer));
+                output.appendChild(document.createElement('br'));
+            }
+        });
+    }
+    function addPreset(presetName, callback) {
+        var presetBox = document.getElementById('presets');
+        if (presetBox === null) {
+            alert(FATAL_ERROR);
+            return;
+        }
+        var preset = document.createElement('div');
+        preset.onclick = callback;
+        preset.classList.add('preset');
+        preset.appendChild(document.createTextNode(presetName));
+        presetBox.appendChild(preset);
+    }
+    function setUpCopy() {
+        var copyElem = document.getElementById('copy');
+        if (copyElem === null) {
+            alert(FATAL_ERROR);
+            return;
+        }
+        copyElem.onclick = function () {
+            var output = document.getElementById('outputText');
+            if (output == null) {
+                alert('Failed to copy text');
+                return;
+            }
+            if (document.body.createTextRange) {
+                var range = document.body.createTextRange();
+                range.moveToElementText(output);
+                range.select();
+            }
+            else if (window.getSelection) {
+                var selection = window.getSelection();
+                var range = document.createRange();
+                range.selectNodeContents(output);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+            try {
+                document.execCommand('copy');
+            }
+            catch (error) {
+                console.log('Failed to copy to clipboard');
+            }
+        };
+    }
+    function setAllClear() {
+        clearAll();
+        printAnswer();
+    }
+    function clearAll() {
+        answers = answers.map(function (elem) {
+            elem.answers.map(function (ans) {
+                ans.answer = undefined;
+                return ans;
+            });
+            return elem;
+        });
+        var answersList = document.getElementsByClassName('answer');
+        for (var i = 0; i < answersList.length; i++) {
+            answersList[i].classList.remove('selected');
+        }
+        ;
+        var textBox = document.getElementsByClassName('otherInput');
+        for (var i = 0; i < textBox.length; i++) {
+            textBox[i].value = '';
+        }
+        ;
+    }
+    function setUpQuestions() {
+        for (var category in questions_1.questionJSON) {
+            if (questions_1.questionJSON.hasOwnProperty(category)) {
+                setupCategory(category);
+            }
+        }
+    }
+    function setupCategory(categoryName) {
+        createCategory(categoryName);
+        var qs = questions_1.questionJSON[categoryName];
+        for (var question in qs) {
+            if (qs.hasOwnProperty(question)) {
+                var answer = qs[question];
+                if (Array.isArray(answer)) {
+                    addQuestion(categoryName, categoryName, question, answer);
+                }
+                else {
+                    setupSubCategory(categoryName, question);
+                }
+            }
+        }
+    }
+    function setupSubCategory(categoryName, subcategoryName) {
+        createSubCategory(categoryName, subcategoryName);
+        var questionList = questions_1.questionJSON[categoryName][subcategoryName];
+        for (var question in questionList) {
+            if (questionList.hasOwnProperty(question)) {
+                var answer = questionList[question];
+                addQuestion(categoryName, subcategoryName, question, answer);
+            }
+        }
+    }
+    window.onload = function () {
+        addPreset('Clear All', setAllClear);
+        setUpQuestions();
+        setUpCopy();
+        printAnswer();
+    };
+})();
+</script>
+</head>
+<body>
+  <div class="container">
+    <div id="header">
+      Medical Report Aid
+    </div>
+    <div id="presets">
+    </div>
+    <div id='categoryList'></div>
+    <div id="outputHeader">
+      Report text:
+    </div>
+    <div id="outputText"></div>
+    <div id='copy'>Copy</div>
+
+    <div id="links">
+      <div id="linksHeading">Useful Links</div>
+      <ul>
+        <li><a target="_blank" href="https://www.mdcalc.com/heart-score-major-cardiac-events">Heart score (ACS risk)</a></li>
+        <li><a target="_blank" href="https://www.mdcalc.com/perc-rule-pulmonary-embolism">PERC rule (ruling out PE)</a></li>
+        <li><a target="_blank" href="https://www.mdcalc.com/wells-criteria-pulmonary-embolism">Wells score (PE risk score)</a></li>
+        <li><a target="_blank" href="https://www.mdcalc.com/wells-criteria-pulmonary-embolism">NEWS score</a></li>
+        <li><a target="_blank" href="https://www.mdcalc.com/wells-criteria-pulmonary-embolism">PEWS score</a></li>
+      </ul>
+    </div>
+    <div id="footer">
+      &copy; 2017 Roman Klapaukh. 
+      <div id="warranty">
+      The software is provided "as is", without 
+      warranty of any kind, express or
+      implied, including but not limited to the warranties of merchantability,
+      fitness for a particular purpose and noninfringement. In no event shall the
+      authors or copyright holders be liable for any claim, damages or other
+      liability, whether in an action of contract, tort or otherwise, arising from,
+      out of or in connection with the software or the use or other dealings in the
+      software.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+<!--- vim: set sw=2 ts=2 expandtab tw=80 : -->
